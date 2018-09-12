@@ -1,0 +1,18 @@
+@model MovieModel
+
+@{
+    ViewData["Title"] = $"{Model.Title} - Moviegraph";
+}
+
+<h1>@Model.Title (@Model.Released)</h1>
+<p class="movie-tagline">@Model.Tagline</p>
+
+<div class="movie-cast">
+    <h2>Cast</h2>
+    <ul>
+        @foreach (var actor in Model.Actors)
+        {
+            <li>@actor.Name</li>
+        }
+    </ul>
+</div>

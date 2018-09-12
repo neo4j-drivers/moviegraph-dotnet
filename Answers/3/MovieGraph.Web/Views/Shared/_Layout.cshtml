@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Moviegraph</title>
+    <link href="~/css/movie.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<header>
+    <form class="movie-search" action="@Url.Action("Search", "Home")">
+        <h1>
+            <a href="/">Moviegraph</a>
+        </h1>
+        <input name="q" value="@ViewData["q"]" type="text" placeholder="Search" aria-label="Search">
+        <button>&#x1F50D;</button>
+        <select name="order" value="@ViewData["order"]">
+            <option value="r" @(Equals("r", ViewData["order"]) ? "selected='selected'" : "")>most recent first</option>
+            <option value="p" @(Equals("p", ViewData["order"]) ? "selected='selected'" : "")>most popular first</option>
+            <option value="a" @(Equals("a", ViewData["order"]) ? "selected='selected'" : "")>alphabetically</option>
+        </select>
+    </form>
+
+</header>
+
+<main>
+
+    @RenderBody()
+
+</main>
+
+</body>
+
+</html>

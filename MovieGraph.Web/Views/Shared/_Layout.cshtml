@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Moviegraph</title>
+    <link href="~/css/movie.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+
+<header>
+
+    <form class="movie-search" action="@Url.Action("Search", "Home")">
+        <h1>
+            <a href="/">Moviegraph</a>
+        </h1>
+        <input name="q" value="@ViewData["q"]" type="text" placeholder="Search" aria-label="Search">
+    </form>
+
+</header>
+
+<main>
+
+    @RenderBody()
+
+</main>
+
+</body>
+
+</html>

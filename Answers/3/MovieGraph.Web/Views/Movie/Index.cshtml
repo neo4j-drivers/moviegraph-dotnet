@@ -1,0 +1,37 @@
+@model MovieModel
+
+@{
+    ViewData["Title"] = $"{Model.Title} - Moviegraph";
+}
+
+<h1>@Model.Title (@Model.Released)</h1>
+<p class="movie-tagline">@Model.Tagline</p>
+
+<form class="movie-stars" method="POST">
+    <input name="stars" type="hidden">
+    @foreach (var star in Enumerable.Range(1, 5))
+    {
+        <button class="movie-star" onclick="stars.value=@star">
+            @if (Model.Stars < star)
+            {
+                Output.Write("&#x2606");
+            }
+            else
+            {
+                Output.Write("&#x2605;");
+            }
+        </button>
+    }
+</form>
+
+<div class="movie-cast">
+    <h2>Cast</h2>
+    <ul>
+        @foreach (var actor in Model.Actors)
+        {
+            <li>
+                <a href="@Url.Action("Index", "Person", new {id = actor.Name})">@actor.Name</a>
+            </li>
+        }
+    </ul>
+</div>
