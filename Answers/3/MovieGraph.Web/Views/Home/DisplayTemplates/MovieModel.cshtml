@@ -1,0 +1,10 @@
+@model MovieModel
+
+<div class="movie-summary">
+    <h1 class="movie-title">
+        <a href="@Url.Action("Index", "Movie", new {id = Model.Title})">@Model.Title (@Model.Released)</a>
+    </h1>
+    <p class="movie-tagline">@Model.Tagline</p>
+
+    @Html.DisplayFor(m => m.Stars, "Stars")
+</div>

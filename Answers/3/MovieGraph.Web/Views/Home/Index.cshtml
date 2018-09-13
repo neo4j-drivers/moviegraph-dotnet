@@ -5,29 +5,5 @@
 }
 
 <div class="movie-list">
-    @foreach (var movie in Model)
-    {
-        <div class="movie-summary">
-            <h1 class="movie-title">
-                <a href="@Url.Action("Index", "Movie", new {id = movie.Title})">@movie.Title (@movie.Released)</a>
-            </h1>
-            <p class="movie-tagline">@movie.Tagline</p>
-            
-            <div class="movie-stars">
-                @foreach (var star in Enumerable.Range(1, 5))
-                {
-                    <span class="movie-star">
-                        @if (movie.Stars < star)
-                        {
-                            Output.Write("&#x2606;");    
-                        }
-                        else
-                        {
-                            Output.Write("&#x2605;");
-                        }
-                    </span>
-                }
-            </div>
-        </div>
-    }
+    @Html.DisplayFor(m => m)
 </div>

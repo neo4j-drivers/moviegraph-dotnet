@@ -1,0 +1,17 @@
+@model int
+
+<div class="movie-stars">
+    @foreach (var star in Enumerable.Range(1, 5))
+    {
+        <span class="movie-star">
+            @if (Model < star)
+            {
+                Output.Write("&#x2606;");
+            }
+            else
+            {
+                Output.Write("&#x2605;");
+            }
+        </span>
+    }
+</div>

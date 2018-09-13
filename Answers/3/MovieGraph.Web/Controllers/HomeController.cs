@@ -21,25 +21,60 @@ namespace MovieGraph.Web.Controllers
         [Route("")]
         public Task<IActionResult> Index()
         {
-            return Search(null, null);
+            return Search(null, Order.MostRecentFirst);
         }
 
         [Route("search")]
-        public async Task<IActionResult> Search(string q, string order)
+        public async Task<IActionResult> Search(string q, Order order)
         {
-            ViewData["q"] = q;
-            ViewData["order"] = order;
+            return View("Index", await MatchMovies(q, order));
+        }
 
-            var session = driver.Session(AccessMode.Read);
+        private async Task<IEnumerable<MovieModel>> MatchMovies(string term, Order order)
+        {
+            if (string.IsNullOrEmpty(term))
+            {
+                return Enumerable.Empty<MovieModel>();
+            }
+
+            string query;
+            switch (order)
+            {
+                case Order.MostRecentFirst:
+                    query =
+                        "MATCH (movie:Movie) WHERE toLower(movie.title) " +
+                        "CONTAINS toLower($term) " +
+                        "RETURN movie ORDER BY movie.released DESCENDING";
+                    break;
+                case Order.MostPopularFirst:
+                    query =
+                        "MATCH (movie:Movie) WHERE toLower(movie.title) " +
+                        "CONTAINS toLower($term) " +
+                        "RETURN movie ORDER BY coalesce(movie.stars, 0) DESCENDING";
+                    break;
+                case Order.Alphabetically:
+                    query =
+                        "MATCH (movie:Movie) WHERE toLower(movie.title) " +
+                        "CONTAINS toLower($term) " +
+                        "RETURN movie ORDER BY movie.title ASCENDING";
+
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(order), order, null);
+            }
+
+            var session = driver.Session();
             try
             {
-                var results = await session.ReadTransactionAsync(tx => MatchMovies(tx, q, order));
+                return await session.ReadTransactionAsync(async tx =>
+                {
+                    var cursor =
+                        await tx.RunAsync(
+                            query,
+                            new {term});
 
-                return View("Index", results);
-            }
-            catch (ArgumentException ex)
-            {
-                return StatusCode(400, ex.Message);
+                    return await cursor.ToListAsync(record => new MovieModel(record));
+                });
             }
             finally
             {
@@ -48,41 +83,6 @@ namespace MovieGraph.Web.Controllers
                     await session.CloseAsync();
                 }
             }
-        }
-
-        private async Task<IEnumerable<MovieModel>> MatchMovies(ITransaction tx, string term, string order)
-        {
-            if (string.IsNullOrEmpty(term))
-            {
-                return Enumerable.Empty<MovieModel>();
-            }
-
-            var query = string.Empty;
-            if ("r".Equals(order))
-            {
-                query =
-                    "MATCH (movie:Movie) WHERE toLower(movie.title) CONTAINS toLower($term) RETURN movie ORDER BY movie.released DESCENDING";
-            }
-            else if ("p".Equals(order))
-            {
-                query =
-                    "MATCH (movie:Movie) WHERE toLower(movie.title) CONTAINS toLower($term)  RETURN movie ORDER BY coalesce(movie.stars, 0) DESCENDING";
-            }
-            else if ("a".Equals(order))
-            {
-                query =
-                    "MATCH (movie:Movie) WHERE toLower(movie.title) CONTAINS toLower($term) RETURN movie ORDER BY movie.title ASCENDING";
-            }
-            else
-            {
-                throw new ArgumentException("Bad order parameter", nameof(order));
-            }
-
-
-            var cursor =
-                await tx.RunAsync(query, new {term});
-
-            return await cursor.ToListAsync(record => new MovieModel(record));
         }
     }
 }

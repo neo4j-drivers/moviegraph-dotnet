@@ -10,34 +10,14 @@
 <body>
 
 <header>
+
     <form class="movie-search" action="@Url.Action("Search", "Home")">
         <h1>
             <a href="/">Moviegraph</a>
         </h1>
-        <input name="q" value="@ViewData["q"]" type="text" placeholder="Search" aria-label="Search">
+        <input name="q" value="@Context.Request.Query["q"]" type="text" placeholder="Search" aria-label="Search">
         <button>&#x1F50D;</button>
-
-        @Html.DropDownList("order", new[]
-        {
-            new SelectListItem
-            {
-                Text = "most recent first",
-                Value = "r",
-                Selected = "r".Equals(ViewData["order"])
-            },
-            new SelectListItem
-            {
-                Text = "most popular first",
-                Value = "p",
-                Selected = "p".Equals(ViewData["order"])
-            },
-            new SelectListItem
-            {
-                Text = "alphabetically",
-                Value = "a",
-                Selected = "a".Equals(ViewData["order"])
-            }
-        })
+        @Html.DropDownList("order", Html.GetEnumSelectList<Order>())
     </form>
 
 </header>
