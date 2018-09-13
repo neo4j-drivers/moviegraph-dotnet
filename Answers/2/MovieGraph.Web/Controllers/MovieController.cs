@@ -20,36 +20,40 @@ namespace MovieGraph.Web.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Index(string id)
         {
-            var session = driver.Session(AccessMode.Read);
-            try
+            var movie = await MatchMovie(id);
+            if (movie == null)
             {
-                var movie = await session.ReadTransactionAsync(tx => MatchMovie(tx, id));
-                if (movie == null)
-                {
-                    return StatusCode(404);
-                }
+                return StatusCode(404);
+            }
 
-                return View("Index", movie);
-            }
-            finally
-            {
-                if (session != null)
-                {
-                    await session.CloseAsync();
-                }
-            }
+            return View("Index", movie);
         }
 
         [Route("{id}")]
         [HttpPost]
         public async Task<IActionResult> SetStars(string id, int stars)
         {
+            await SetMovieStars(id, stars);
+
+            return RedirectToAction("Index");
+        }
+
+        private async Task<MovieModel> MatchMovie(string title)
+        {
             var session = driver.Session();
             try
             {
-                await session.WriteTransactionAsync(tx => SetMovieStars(tx, id, stars));
+                return await session.ReadTransactionAsync(async tx =>
+                {
+                    var cursor =
+                        await tx.RunAsync(
+                            "MATCH (movie:Movie) WHERE movie.title = $title " +
+                            "OPTIONAL MATCH(person) -[:ACTED_IN]->(movie) " +
+                            "RETURN movie, collect(person) AS actors",
+                            new {title});
 
-                return RedirectToAction("Index");
+                    return new MovieModel(await cursor.SingleAsync());
+                });
             }
             finally
             {
@@ -60,22 +64,24 @@ namespace MovieGraph.Web.Controllers
             }
         }
 
-        private async Task<MovieModel> MatchMovie(ITransaction tx, string title)
+        private async Task SetMovieStars(string title, int stars)
         {
-            var cursor =
-                await tx.RunAsync(
-                    "MATCH (movie:Movie) WHERE movie.title = $title OPTIONAL MATCH (person)-[:ACTED_IN]->(movie) RETURN movie, collect(person) AS actors",
-                    new {title});
-
-            var found = await cursor.ToListAsync(record => new MovieModel(record));
-
-            return found.SingleOrDefault();
-        }
-
-        private Task SetMovieStars(ITransaction tx, string title, int stars)
-        {
-            return tx.RunAsync("MATCH (movie:Movie) WHERE movie.title = $title SET movie.stars = $stars",
-                new {title, stars});
+            var session = driver.Session();
+            try
+            {
+                await session.WriteTransactionAsync(tx =>
+                    tx.RunAsync("MATCH (movie:Movie) WHERE movie.title = $title " +
+                                "SET movie.stars = $stars",
+                        new {title, stars})
+                );
+            }
+            finally
+            {
+                if (session != null)
+                {
+                    await session.CloseAsync();
+                }
+            }
         }
     }
 }

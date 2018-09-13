@@ -1,0 +1,5 @@
+@model MovieModel
+
+<li>
+    <a href="@Url.Action("Index", "Movie", new {id = Model.Title})">@Model.Title (@Model.Released)</a>
+</li>

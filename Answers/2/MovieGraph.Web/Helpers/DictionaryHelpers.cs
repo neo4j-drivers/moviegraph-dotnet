@@ -8,24 +8,7 @@ namespace MovieGraph.Web
 {
     public static class DictionaryHelpers
     {
-        public static object GetOrDefault(this IReadOnlyDictionary<string, object> dict, string key,
-            object defaultValue)
-        {
-            if (dict.TryGetValue(key, out var value))
-            {
-                if (value == null)
-                {
-                    return defaultValue;
-                }
-
-                return value;
-            }
-
-            return defaultValue;
-        }
-
         public static T GetOrDefault<T>(this IReadOnlyDictionary<string, object> dict, string key, T defaultValue)
-            where T : IConvertible
         {
             if (dict.TryGetValue(key, out var value))
             {
@@ -35,27 +18,28 @@ namespace MovieGraph.Web
                 }
 
                 var actualType = typeof(T);
+                var underlyingType = Nullable.GetUnderlyingType(actualType);
+                if (underlyingType != null)
+                {
+                    actualType = underlyingType;
+                }
+
                 if (actualType.GetTypeInfo().IsEnum)
                 {
                     return (T) Enum.Parse(actualType, Convert.ToString(value), true);
                 }
 
-                return (T) Convert.ChangeType(value, typeof(T));
-            }
-
-            return defaultValue;
-        }
-
-        public static object GetOrDefault(this IDictionary<string, object> dict, string key, object defaultValue)
-        {
-            if (dict.TryGetValue(key, out var value))
-            {
-                if (value == null)
+                if (actualType.IsInstanceOfType(value))
                 {
-                    return defaultValue;
+                    return (T) value;
                 }
 
-                return value;
+                if (typeof(IComparable).IsAssignableFrom(actualType))
+                {
+                    return (T) Convert.ChangeType(value, actualType);
+                }
+
+                throw new InvalidCastException($"Unable to cast {value.GetType().FullName} to {actualType.FullName}");
             }
 
             return defaultValue;
@@ -72,12 +56,28 @@ namespace MovieGraph.Web
                 }
 
                 var actualType = typeof(T);
+                var underlyingType = Nullable.GetUnderlyingType(actualType);
+                if (underlyingType != null)
+                {
+                    actualType = underlyingType;
+                }
+
                 if (actualType.GetTypeInfo().IsEnum)
                 {
                     return (T) Enum.Parse(actualType, Convert.ToString(value), true);
                 }
 
-                return (T) Convert.ChangeType(value, typeof(T));
+                if (actualType.IsInstanceOfType(value))
+                {
+                    return (T) value;
+                }
+
+                if (typeof(IComparable).IsAssignableFrom(actualType))
+                {
+                    return (T) Convert.ChangeType(value, typeof(T));
+                }
+
+                throw new InvalidCastException($"Unable to cast {value.GetType().FullName} to {actualType.FullName}");
             }
 
             return defaultValue;

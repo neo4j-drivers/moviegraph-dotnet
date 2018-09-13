@@ -1,0 +1,18 @@
+@model int
+
+<form class="movie-stars" method="POST">
+    <input name="stars" type="hidden">
+    @foreach (var star in Enumerable.Range(1, 5))
+    {
+        <button class="movie-star" onclick="stars.value = @star">
+            @if (Model < star)
+            {
+                Output.Write("&#x2606");
+            }
+            else
+            {
+                Output.Write("&#x2605;");
+            }
+        </button>
+    }
+</form>

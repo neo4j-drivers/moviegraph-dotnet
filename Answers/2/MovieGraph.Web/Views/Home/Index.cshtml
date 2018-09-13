@@ -5,13 +5,5 @@
 }
 
 <div class="movie-list">
-    @foreach (var movie in Model)
-    {
-        <div class="movie-summary">
-            <h1 class="movie-title">
-                <a href="@Url.Action("Index", "Movie", new {id = movie.Title})">@movie.Title (@movie.Released)</a>
-            </h1>
-            <p class="movie-tagline">@movie.Tagline</p>
-        </div>
-    }
+    @Html.DisplayFor(m => m)
 </div>

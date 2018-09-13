@@ -20,16 +20,31 @@ namespace MovieGraph.Web.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Index(string id)
         {
-            var session = driver.Session(AccessMode.Read);
+            var person = await MatchPerson(id);
+            if (person == null)
+            {
+                return StatusCode(404);
+            }
+
+            return View("Index", person);
+        }
+
+        private async Task<PersonModel> MatchPerson(string name)
+        {
+            var session = driver.Session();
             try
             {
-                var person = await session.ReadTransactionAsync(tx => MatchPerson(tx, id));
-                if (person == null)
+                return await session.ReadTransactionAsync(async tx =>
                 {
-                    return StatusCode(404);
-                }
+                    var cursor =
+                        await tx.RunAsync(
+                            "MATCH (person:Person) WHERE person.name = $name " +
+                            "OPTIONAL MATCH (person)-[:ACTED_IN]->(movie) " +
+                            "RETURN person, collect(movie) AS movies",
+                            new {name});
 
-                return View("Index", person);
+                    return new PersonModel(await cursor.SingleAsync());
+                });
             }
             finally
             {
@@ -38,18 +53,6 @@ namespace MovieGraph.Web.Controllers
                     await session.CloseAsync();
                 }
             }
-        }
-
-        private async Task<PersonModel> MatchPerson(ITransaction tx, string name)
-        {
-            var cursor =
-                await tx.RunAsync(
-                    "MATCH (person:Person) WHERE person.name = $name OPTIONAL MATCH (person)-[:ACTED_IN]->(movie) RETURN person, collect(movie) AS movies",
-                    new {name});
-
-            var found = await cursor.ToListAsync(record => new PersonModel(record));
-
-            return found.SingleOrDefault();
         }
     }
 }

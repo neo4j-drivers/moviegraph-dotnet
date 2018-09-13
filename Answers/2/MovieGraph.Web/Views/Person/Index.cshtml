@@ -1,5 +1,8 @@
 @model PersonModel
 
+@{
+    ViewData["Title"] = $"{Model.Name} - Moviegraph";
+}
 
 <h1>@Model.Name</h1>
 <p class="person-born">Born: @Model.Born</p>
@@ -7,9 +10,6 @@
 <div class="person-filmography">
     <h2>Filmography</h2>
     <ul>
-        @foreach (var movie in Model.Movies)
-        {
-            <li><a href="@Url.Action("Index", "Movie", new { id = movie.Title })">@movie.Title (@movie.Released)</a></li>
-        }
+        @Html.DisplayFor(m => m.Movies)
     </ul>
 </div>
