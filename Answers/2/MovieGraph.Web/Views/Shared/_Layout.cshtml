@@ -15,7 +15,7 @@
         <h1>
             <a href="/">Moviegraph</a>
         </h1>
-        <input name="q" value="@ViewData["q"]" type="text" placeholder="Search" aria-label="Search">
+        <input name="q" value="@Context.Request.Query["q"]" type="text" placeholder="Search" aria-label="Search">
     </form>
 
 </header>
