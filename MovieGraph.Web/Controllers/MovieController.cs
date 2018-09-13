@@ -31,7 +31,7 @@ namespace MovieGraph.Web.Controllers
 
         private async Task<MovieModel> MatchMovie(string title)
         {
-            var session = driver.Session(AccessMode.Read);
+            var session = driver.Session();
             try
             {
                 return await session.ReadTransactionAsync(async tx =>
