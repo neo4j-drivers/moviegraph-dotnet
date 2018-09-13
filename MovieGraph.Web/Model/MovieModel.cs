@@ -6,23 +6,26 @@ namespace MovieGraph.Web.Model
 {
     public class MovieModel
     {
+        public const string MovieKey = "movie";
+        public const string TitleKey = "title";
+        public const string TaglineKey = "tagline";
+        public const string ReleasedKey = "released";
+        public const string ActorsKey = "actors";
+
         public MovieModel(IRecord record)
         {
-            var movie = (INode) record["movie"];
+            var movie = record.GetOrDefault(MovieKey, (INode) null);
             if (movie != null)
             {
-                Title = movie["title"].As<string>();
-                Tagline = movie.GetOrDefault("tagline", string.Empty);
-                Released = movie.GetOrDefault("released", 0);
+                Title = movie.GetOrDefault<string>(TitleKey, null);
+                Tagline = movie.GetOrDefault<string>(TaglineKey, null);
+                Released = movie.GetOrDefault<int?>(ReleasedKey, null);
             }
 
-            if (record.Keys.Contains("actors"))
+            var actors = record.GetOrDefault(ActorsKey, (List<object>) null);
+            if (actors != null)
             {
-                var actors = (List<object>) record["actors"];
-                if (actors != null)
-                {
-                    Actors = actors.Select(actor => new PersonModel(actor.As<INode>())).OrderBy(p => p.Name);
-                }
+                Actors = actors.Select(actor => new PersonModel((INode) actor)).OrderBy(p => p.Name);
             }
         }
 
@@ -30,7 +33,7 @@ namespace MovieGraph.Web.Model
 
         public string Tagline { get; }
 
-        public int Released { get; }
+        public int? Released { get; }
 
         public IEnumerable<PersonModel> Actors { get; }
     }

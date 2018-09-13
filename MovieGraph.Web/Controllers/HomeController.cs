@@ -27,14 +27,28 @@ namespace MovieGraph.Web.Controllers
         [Route("search")]
         public async Task<IActionResult> Search(string q)
         {
-            ViewData["q"] = q;
+            return View("Index", await MatchMovies(q));
+        }
 
-            var session = driver.Session(AccessMode.Read);
+        private async Task<IEnumerable<MovieModel>> MatchMovies(string term)
+        {
+            if (string.IsNullOrEmpty(term))
+            {
+                return Enumerable.Empty<MovieModel>();
+            }
+
+            var session = driver.Session();
             try
             {
-                var results = await session.ReadTransactionAsync(tx => MatchMovies(tx, q));
+                return await session.ReadTransactionAsync(async tx =>
+                {
+                    var cursor =
+                        await tx.RunAsync(
+                            "MATCH (movie:Movie) WHERE toLower(movie.title) CONTAINS toLower($term) RETURN movie",
+                            new {term});
 
-                return View("Index", results);
+                    return await cursor.ToListAsync(record => new MovieModel(record));
+                });
             }
             finally
             {
@@ -43,20 +57,6 @@ namespace MovieGraph.Web.Controllers
                     await session.CloseAsync();
                 }
             }
-        }
-
-        private async Task<IEnumerable<MovieModel>> MatchMovies(ITransaction tx, string term)
-        {
-            if (string.IsNullOrEmpty(term))
-            {
-                return Enumerable.Empty<MovieModel>();
-            }
-
-            var cursor =
-                await tx.RunAsync("MATCH (movie:Movie) WHERE toLower(movie.title) CONTAINS toLower($term) RETURN movie",
-                    new {term});
-
-            return await cursor.ToListAsync(record => new MovieModel(record));
         }
     }
 }

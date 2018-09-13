@@ -20,16 +20,31 @@ namespace MovieGraph.Web.Controllers
         [Route("{id}")]
         public async Task<IActionResult> Index(string id)
         {
+            var movie = await MatchMovie(id);
+            if (movie == null)
+            {
+                return StatusCode(404);
+            }
+
+            return View("Index", movie);
+        }
+
+        private async Task<MovieModel> MatchMovie(string title)
+        {
             var session = driver.Session(AccessMode.Read);
             try
             {
-                var movie = await session.ReadTransactionAsync(tx => MatchMovie(tx, id));
-                if (movie == null)
+                return await session.ReadTransactionAsync(async tx =>
                 {
-                    return StatusCode(404);
-                }
+                    var cursor =
+                        await tx.RunAsync(
+                            "MATCH (movie:Movie) WHERE movie.title = $title " +
+                            "OPTIONAL MATCH(person) -[:ACTED_IN]->(movie) " +
+                            "RETURN movie, collect(person) AS actors",
+                            new {title});
 
-                return View("Index", movie);
+                    return new MovieModel(await cursor.SingleAsync());
+                });
             }
             finally
             {
@@ -38,18 +53,6 @@ namespace MovieGraph.Web.Controllers
                     await session.CloseAsync();
                 }
             }
-        }
-
-        private async Task<MovieModel> MatchMovie(ITransaction tx, string title)
-        {
-            var cursor =
-                await tx.RunAsync(
-                    "MATCH (movie:Movie) WHERE movie.title = $title OPTIONAL MATCH (person)-[:ACTED_IN]->(movie) RETURN movie, collect(person) AS actors",
-                    new {title});
-
-            var found = await cursor.ToListAsync(record => new MovieModel(record));
-
-            return found.SingleOrDefault();
         }
     }
 }

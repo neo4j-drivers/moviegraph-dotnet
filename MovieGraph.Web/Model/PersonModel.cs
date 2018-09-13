@@ -5,6 +5,8 @@ namespace MovieGraph.Web.Model
 {
     public class PersonModel
     {
+        public const string NameKey = "name";
+
         public PersonModel(INode node)
         {
             if (node == null)
@@ -12,7 +14,7 @@ namespace MovieGraph.Web.Model
                 throw new ArgumentNullException(nameof(node));
             }
 
-            Name = node["name"].As<string>();
+            Name = node.GetOrDefault<string>(NameKey, null);
         }
 
         public string Name { get; }
