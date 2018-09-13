@@ -19,13 +19,7 @@ namespace MovieGraph.Web.Controllers
         }
 
         [Route("")]
-        public Task<IActionResult> Index()
-        {
-            return Search(null);
-        }
-
-        [Route("search")]
-        public async Task<IActionResult> Search(string q)
+        public async Task<IActionResult> Index(string q)
         {
             return View("Index", await MatchMovies(q));
         }
