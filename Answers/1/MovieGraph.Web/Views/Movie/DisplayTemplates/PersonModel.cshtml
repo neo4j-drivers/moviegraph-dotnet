@@ -1,0 +1,5 @@
+@model PersonModel
+
+<li>
+    <a href="@Url.Action("Index", "Person", new {id = Model.Name})">@Model.Name</a>
+</li>

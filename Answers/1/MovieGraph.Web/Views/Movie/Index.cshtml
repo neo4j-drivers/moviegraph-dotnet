@@ -10,11 +10,6 @@
 <div class="movie-cast">
     <h2>Cast</h2>
     <ul>
-        @foreach (var actor in Model.Actors)
-        {
-            <li>
-                <a href="@Url.Action("Index", "Person", new {id = actor.Name})">@actor.Name</a>
-            </li>
-        }
+        @Html.DisplayFor(m => m.Actors)
     </ul>
 </div>
